@@ -1,30 +1,26 @@
 import taskModel from "../models/taskModel.js";
+import { idValidation, titleValidation } from "../validators/api-validators.js";
 
-function createTask(req, res) {
+const createTask = (req, res) => {
   const { titulo, descricao } = req.body;
-
-  if (!titulo || titulo.trim() === "") {
-    return res.status(400).json({
-      erro: "Título é obrigatório",
-    });
-  }
-
-  if (titulo.length > 100) {
-    return res.status(400).json({
-      erro: "Título muito grande",
-    });
-  }
+  titleValidation(titulo);
 
   const dataCriacao = new Date().toISOString();
 
-  taskModel.create(titulo, descricao, dataCriacao);
+  taskModel.create(titulo, descricao, dataCriacao, (err, id) => {
+    if (err) {
+      return res.status(500).json({
+        erro: err.message,
+      });
+    }
 
-  res.status(201).json({
-    mensagem: "Tarefa criada com sucesso",
+    res.status(201).json({
+      mensagem: "Tarefa criada com sucesso", id
+    });
   });
-}
+};
 
-function listTasks(req, res) {
+const listTasks = (req, res) => {
   taskModel.findAll((err, tasks) => {
     if (err) {
       return res.status(500).json({
@@ -33,16 +29,11 @@ function listTasks(req, res) {
     }
     res.json(tasks);
   });
-}
+};
 
-function searchById(req, res) {
+const getTaskById = (req, res) => {
   const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({
-      erro: "ID inválido",
-    });
-  }
+  idValidation(id);
 
   taskModel.findById(id, (err, task) => {
     if (err) {
@@ -58,16 +49,11 @@ function searchById(req, res) {
     }
     res.json(task);
   });
-}
+};
 
-function deleteTask(req, res) {
+const deleteTask = (req, res) => {
   const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({
-      erro: "ID inválido",
-    });
-  }
+  idValidation(id);
 
   taskModel.deleteById(id, (err, changes) => {
     if (err) {
@@ -86,18 +72,15 @@ function deleteTask(req, res) {
       mensagem: "Tarefa removida com sucesso",
     });
   });
-}
+};
 
-function updateTask(req, res) {
+const updateTask = (req, res) => {
   const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({
-      erro: "ID inválido",
-    });
-  }
+  idValidation(id);
 
   const { titulo, descricao, concluida } = req.body;
+  titleValidation(titulo);
+
   const dataConclusao = concluida ? new Date().toISOString() : null;
 
   taskModel.update(
@@ -124,12 +107,6 @@ function updateTask(req, res) {
       });
     },
   );
-}
-
-export {
-  createTask,
-  listTasks,
-  searchById,
-  deleteTask,
-  updateTask,
 };
+
+export { createTask, listTasks, getTaskById, deleteTask, updateTask };

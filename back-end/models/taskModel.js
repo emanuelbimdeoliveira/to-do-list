@@ -1,21 +1,33 @@
 import db from "../database/database.js";
 
-function create(titulo, descricao, dataCriacao) {
+const create = (
+  titulo,
+  descricao,
+  dataCriacao,
+  callback
+) => {
   db.run(
     `
-        INSERT INTO tarefas (
-            titulo,
-            descricao,
-            concluida,
-            data_criacao
-        )
-        VALUES (?, ?, ?, ?)
-        `,
+    INSERT INTO tarefas (
+      titulo,
+      descricao,
+      concluida,
+      data_criacao
+    )
+    VALUES (?, ?, ?, ?)
+    `,
     [titulo, descricao, false, dataCriacao],
-  );
-}
 
-function findAll(callback) {
+    function(err) {
+      if (err) {
+        return callback(err, null);
+      }
+      callback(null, this.lastID);
+    }
+  );
+};
+
+const findAll = (callback) => {
   db.all("SELECT * FROM tarefas", [], (err, rows) => {
     if (err) {
       return callback(err, null);
@@ -25,7 +37,7 @@ function findAll(callback) {
   });
 }
 
-function findById(id, callback) {
+const findById = (id, callback) => {
   db.get("SELECT * FROM tarefas WHERE id = ?", [id], (err, row) => {
     if (err) {
       return callback(err, null);
